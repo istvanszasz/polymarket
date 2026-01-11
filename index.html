@@ -99,7 +99,7 @@
             margin-top: 15px;
         }
 
-        . info-item {
+        .info-item {
             display: flex;
             flex-direction: column;
         }
@@ -157,7 +157,7 @@
             margin-left: 10px;
         }
 
-        . success-notice {
+        .success-notice {
             background: #d4edda;
             color: #155724;
             padding: 15px;
@@ -321,7 +321,7 @@
                 const slug = event.slug || '';
                 const link = `https://polymarket.com/event/${slug}`;
 
-                const tags = event.markets? .[0]?.tags || [];
+                const tags = event.markets?.[0]?.tags || [];
                 const tagsHTML = tags.slice(0, 3).map(tag => 
                     `<span class="tag">${tag}</span>`
                 ).join('');
