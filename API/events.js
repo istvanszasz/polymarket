@@ -1,39 +1,23 @@
-export default async function handler(req, res) {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+const fetch = require('node-fetch');
+
+module.exports = async (req, res) => {
+    // CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    if (req.method !== 'GET') {
-        res.status(405).json({ error: 'Method not allowed' });
-        return;
+        return res.status(200).end();
     }
 
     try {
-        console.log('📡 Fetching from Polymarket...');
-        
-        const response = await fetch('https://gamma-api.polymarket.com/events? active=true&closed=false&limit=100');
-        
-        if (!response.ok) {
-            throw new Error(`Polymarket API returned ${response.status}`);
-        }
+        const response = await fetch(
+            'https://gamma-api.polymarket.com/events? active=true&closed=false&limit=100'
+        );
         
         const data = await response.json();
-        console.log(`✅ Success! ${data.length} events`);
-        
-        res.status(200).json(data);
+        return res.status(200).json(data);
         
     } catch (error) {
-        console.error('❌ Error:', error.message);
-        res.status(500).json({ 
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
+        return res.status(500).json({ error: error.message });
     }
-}
+};
