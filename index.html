@@ -1,0 +1,485 @@
+<! DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymarket Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin:  0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .debug-panel {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom:  20px;
+            font-family:  'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .debug-panel h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+
+        .debug-line {
+            margin: 5px 0;
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom:  30px;
+            box-shadow:  0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size:  1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .market-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .market-card:hover {
+            transform: translateY(-5px);
+            box-shadow:  0 5px 15px rgba(0,0,0,0.2);
+            background: #fff;
+        }
+
+        .market-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .market-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        . info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            font-weight:  bold;
+            color: #333;
+        }
+
+        .probability {
+            padding: 8px 15px;
+            border-radius:  20px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .probability.yes {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .probability.no {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #dc3545;
+        }
+
+        .hot-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 4px 10px;
+            border-radius:  12px;
+            font-size:  0.8em;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        . success-notice {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .outcomes {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .outcome-badge {
+            padding: 5px 12px;
+            border-radius:  15px;
+            font-size:  0.9em;
+            font-weight: bold;
+        }
+
+        .market-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #e9ecef;
+            padding: 3px 8px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .market-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Polymarket Dashboard</h1>
+        
+        <div class="debug-panel">
+            <h3>🔍 Debug Log: </h3>
+            <div id="debug-log"></div>
+        </div>
+        
+        <div id="api-notice"></div>
+        
+        <div class="section">
+            <h2>Hetaste bets just nu</h2>
+            <div id="hot-markets" class="loading">Laddar data... </div>
+        </div>
+
+        <div class="section">
+            <h2>Mest intressanta bets (senaste 2 veckorna)</h2>
+            <div id="trending-markets" class="loading">Laddar data...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://gamma-api.polymarket.com/events? active=true&closed=false&limit=100';
+        const debugLog = document.getElementById('debug-log');
+
+        // Debug logger
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ?  '#ff6b6b' : type === 'success' ? '#51cf66' : '#00ff00';
+            const line = document.createElement('div');
+            line.className = 'debug-line';
+            line.style.color = color;
+            line.textContent = `[${timestamp}] ${message}`;
+            debugLog.appendChild(line);
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        // Formatera stora nummer
+        function formatNumber(num) {
+            if (! num || isNaN(num)) return '$0';
+            if (num >= 1000000) {
+                return '$' + (num / 1000000).toFixed(2) + 'M';
+            } else if (num >= 1000) {
+                return '$' + (num / 1000).toFixed(1) + 'K';
+            }
+            return '$' + num. toFixed(0);
+        }
+
+        // Formatera procent - FIX HÄR
+        function formatProbability(prob) {
+            try {
+                if (prob === null || prob === undefined) return '0%';
+                const numProb = typeof prob === 'string' ? parseFloat(prob) : prob;
+                if (isNaN(numProb)) return '0%';
+                return (numProb * 100).toFixed(1) + '%';
+            } catch (e) {
+                log(`⚠️ formatProbability error: ${e.message}`, 'error');
+                return '0%';
+            }
+        }
+
+        // Skapa market card - FIX HÄR
+        function createMarketCard(event, isHot = false) {
+            try {
+                const card = document. createElement('div');
+                card. className = 'market-card';
+                
+                const title = event.title || event.question || 'Untitled Event';
+                const volume = parseFloat(event.volume || 0);
+                const liquidity = parseFloat(event.liquidity || 0);
+                
+                // FIX: Bättre hantering av outcomes
+                let outcomesHTML = '';
+                if (event.markets && event.markets.length > 0) {
+                    const market = event.markets[0];
+                    
+                    // Logga struktur för första market (för debugging)
+                    if (isHot) {
+                        log(`Market struktur: ${JSON.stringify(market).substring(0, 200)}...`);
+                    }
+                    
+                    // Prova flera olika fält där priserna kan finnas
+                    let yesPrice = null;
+                    let noPrice = null;
+                    
+                    if (market. outcomePrices && Array.isArray(market.outcomePrices) && market.outcomePrices.length >= 2) {
+                        yesPrice = parseFloat(market.outcomePrices[0]);
+                        noPrice = parseFloat(market.outcomePrices[1]);
+                    } else if (market.clobTokenIds && market.outcomes && Array.isArray(market. outcomes)) {
+                        // Alternativ struktur
+                        if (market.outcomes.length >= 2) {
+                            yesPrice = parseFloat(market.outcomes[0]. price || market.outcomes[0]);
+                            noPrice = parseFloat(market.outcomes[1].price || market.outcomes[1]);
+                        }
+                    }
+                    
+                    // Validera att vi fick giltiga värden
+                    if (! isNaN(yesPrice) && !isNaN(noPrice) && yesPrice !== null && noPrice !== null) {
+                        outcomesHTML = `
+                            <div class="outcomes">
+                                <span class="outcome-badge probability yes">Ja:  ${formatProbability(yesPrice)}</span>
+                                <span class="outcome-badge probability no">Nej: ${formatProbability(noPrice)}</span>
+                            </div>
+                        `;
+                    } else {
+                        log(`⚠️ Kunde inte hitta giltiga priser för:  ${title. substring(0, 30)}...`);
+                    }
+                }
+
+                const slug = event.slug || '';
+                const link = `https://polymarket.com/event/${slug}`;
+
+                const tags = event.markets? .[0]?.tags || [];
+                const tagsHTML = tags.slice(0, 3).map(tag => 
+                    `<span class="tag">${tag}</span>`
+                ).join('');
+
+                card.innerHTML = `
+                    <div class="market-title">
+                        ${title}
+                        ${isHot ? '<span class="hot-badge">🔥 HOT</span>' : ''}
+                    </div>
+                    ${outcomesHTML}
+                    ${tagsHTML ?  `<div class="market-meta">${tagsHTML}</div>` : ''}
+                    <div class="market-info">
+                        <div class="info-item">
+                            <span class="info-label">Volym (24h)</span>
+                            <span class="info-value">${formatNumber(volume)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Likviditet</span>
+                            <span class="info-value">${formatNumber(liquidity)}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Markets</span>
+                            <span class="info-value">${event.markets?. length || 0}</span>
+                        </div>
+                    </div>
+                `;
+                
+                card.onclick = () => window.open(link, '_blank');
+                
+                return card;
+            } catch (e) {
+                log(`❌ Error creating card: ${e.message}`, 'error');
+                const errorCard = document.createElement('div');
+                errorCard.className = 'market-card';
+                errorCard.innerHTML = `<div class="error">Kunde inte skapa kort:  ${e.message}</div>`;
+                return errorCard;
+            }
+        }
+
+        // Ladda markets
+        async function loadMarkets() {
+            const hotContainer = document.getElementById('hot-markets');
+            const trendingContainer = document.getElementById('trending-markets');
+            const noticeContainer = document.getElementById('api-notice');
+            
+            try {
+                log('🚀 Startar hämtning av data...');
+                log(`📡 API URL: ${API_URL}`);
+                
+                log('⏳ Skickar fetch-request...');
+                const response = await fetch(API_URL);
+                
+                log(`📊 Response status: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                log('📥 Läser JSON-data...');
+                const events = await response.json();
+                
+                log(`✅ Framgång!  ${events.length} events hämtade`, 'success');
+                
+                // Visa första eventet för debugging
+                if (events.length > 0) {
+                    log(`📝 Första event: "${events[0].title?. substring(0, 50)}... "`);
+                }
+                
+                noticeContainer.innerHTML = `
+                    <div class="success-notice">
+                        ✅ <strong>Live-data: </strong> ${events.length} aktiva events från Polymarket
+                    </div>
+                `;
+                
+                hotContainer.innerHTML = '';
+                trendingContainer.innerHTML = '';
+                
+                if (events && events.length > 0) {
+                    log('🔥 Skapar hot markets...');
+                    const sortedByVolume = [... events].sort((a, b) => {
+                        return parseFloat(b.volume || 0) - parseFloat(a.volume || 0);
+                    });
+                    
+                    sortedByVolume.slice(0, 5).forEach((event, idx) => {
+                        hotContainer.appendChild(createMarketCard(event, true));
+                        log(`  ${idx + 1}. ${event.title?.substring(0, 40)}... (Vol: ${formatNumber(event.volume)})`);
+                    });
+                    
+                    log('📈 Skapar trending markets.. .');
+                    const twoWeeksAgo = new Date();
+                    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+                    
+                    const recentEvents = events.filter(event => {
+                        if (event.creationDate) {
+                            const createdDate = new Date(event.creationDate);
+                            return createdDate >= twoWeeksAgo;
+                        }
+                        return true;
+                    });
+                    
+                    log(`  Filtrerade till ${recentEvents.length} events från senaste 2 veckorna`);
+                    
+                    const sortedByInterest = [...recentEvents].sort((a, b) => {
+                        const scoreA = parseFloat(a. liquidity || 0) * 0.6 + parseFloat(a.volume || 0) * 0.4;
+                        const scoreB = parseFloat(b.liquidity || 0) * 0.6 + parseFloat(b.volume || 0) * 0.4;
+                        return scoreB - scoreA;
+                    });
+                    
+                    sortedByInterest.slice(0, 8).forEach((event, idx) => {
+                        trendingContainer.appendChild(createMarketCard(event, false));
+                    });
+                    
+                    log('✅ Alla markets skapade!', 'success');
+                    
+                } else {
+                    log('⚠️ Inga events returnerades från API', 'error');
+                    hotContainer.innerHTML = '<p>Inga aktiva events hittades.</p>';
+                    trendingContainer.innerHTML = '<p>Inga aktiva events hittades.</p>';
+                }
+                
+            } catch (error) {
+                log(`❌ FEL:  ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+                
+                noticeContainer.innerHTML = `
+                    <div class="error">
+                        ❌ <strong>Fel vid hämtning:</strong> ${error.message}
+                        <br><br>
+                        Kontrollera debug-loggen ovan och webbläsarens Console (F12) för mer info.
+                    </div>
+                `;
+                hotContainer.innerHTML = '';
+                trendingContainer.innerHTML = '';
+            }
+        }
+
+        // Starta när sidan laddas
+        window.addEventListener('load', () => {
+            log('🌟 Sidan laddad, startar dashboard... ', 'success');
+            log(`User Agent: ${navigator.userAgent.substring(0, 50)}...`);
+            
+            // Vänta lite så debug-panelen syns
+            setTimeout(() => {
+                loadMarkets();
+            }, 500);
+            
+            // Auto-uppdatering var 3:e minut
+            setInterval(() => {
+                log('🔄 Auto-uppdatering.. .');
+                loadMarkets();
+            }, 3 * 60 * 1000);
+        });
+
+        // Fånga alla fel
+        window.addEventListener('error', (e) => {
+            log(`💥 JavaScript-fel: ${e.message} (${e.filename}:${e.lineno})`, 'error');
+        });
+    </script>
+</body>
+</html>
